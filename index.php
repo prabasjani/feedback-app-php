@@ -5,7 +5,7 @@
   $name = $email = $body = '';
   $nameError = $emailError = $bodyError = '';
   
-  if(isset($_POST['submit'])){
+  if($_SERVER['REQUEST_METHOD'] === 'POST'){
     // validate name
     if (empty($_POST['name'])) {
       $nameError = "Name is Required!";
@@ -26,12 +26,12 @@
     }
     // Add to Database
     if (empty($nameError) && empty($emailError) && empty($bodyError)) {
-      $sql = "INSERT INTO feedbacks(name, email, body) VALUES ('$name', '$email', '$body')";
-      if (mysqli_query($conn, $sql)) {
-        header("Location: feedback.php");
-      } else {
-        echo 'Error '. mysqli_error($conn);
-      } 
+      $statement = $pdo->prepare("INSERT INTO feedbacks(name, email, body) VALUES(:name,:email, :body)");
+      $statement->bindValue(':name', $name);  // named variables :name, :email, :body
+      $statement->bindValue(':email', $email);
+      $statement->bindValue(':body', $body);
+      $statement->execute();
+      header("Location: feedback.php");
     }
   }
 ?>
@@ -43,21 +43,21 @@
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']);?>" method="POST" class="px-5">
       <div class="mb-2">
         <label for="formInput" class="form-label fw-bold">Name: </label>
-        <input type="text" class="form-control shadow <?php echo $nameError ? 'is-invalid': null; ?>" name="name" id="formInput" placeholder="Enter Your Name...">
+        <input type="text" class="form-control shadow <?php echo $nameError ? 'is-invalid': null; ?>" name="name" id="formInput" placeholder="Enter Your Name..." value="<?php echo $name ?>">
         <div class="invalid-feedback">
           <?php echo $nameError; ?>
         </div>
       </div>
       <div class="mb-2">
         <label for="formInput" class="form-label fw-bold">Email: </label>
-      <input type="email" class="form-control shadow <?php echo $emailError ? 'is-invalid': null; ?>" name="email" id="formInput" placeholder="Enter Your Email...">
+      <input type="email" class="form-control shadow <?php echo $emailError ? 'is-invalid': null; ?>" name="email" id="formInput" placeholder="Enter Your Email..." value="<?php echo $email ?>">
       <div class="invalid-feedback">
         <?php echo $emailError; ?>
       </div>
       </div>
       <div class="mb-2">
         <label for="formInput" class="form-label fw-bold">Feedback: </label>
-        <textarea name="body" class="form-control shadow <?php echo $bodyError ? 'is-invalid': null; ?>" id="formInput" placeholder="Type your Feedbacks here..." style="resize: none;"></textarea>
+        <textarea name="body" class="form-control shadow <?php echo $bodyError ? 'is-invalid': null; ?>" id="formInput" placeholder="Type your Feedbacks here..." style="resize: none;"><?php echo $body ?></textarea>
         <div class="invalid-feedback">
           <?php echo $bodyError; ?>
         </div>
